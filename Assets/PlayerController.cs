@@ -31,10 +31,18 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    // Landing on the ground allows the player to jump again
+        // Landing on the ground allows jumping again; touching an obstacle ends the run
     void OnCollisionEnter2D( Collision2D coll ) {
         if ( coll.gameObject.CompareTag( "Ground" ) ) {
             isGrounded = true;
+        } else if ( coll.gameObject.CompareTag( "Obstacle" ) ) {
+            Die();
         }
+    }
+
+    // Freezes the game when the player is hit (a Game Over screen comes later)
+    void Die() {
+        Debug.Log( "Player hit an obstacle" );
+        Time.timeScale = 0f;
     }
 }
