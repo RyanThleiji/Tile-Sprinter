@@ -40,9 +40,8 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    // Freezes the game when the player is hit (a Game Over screen comes later)
+        // Ends the run by telling the GameManager to show the Game Over screen
     void Die() {
-        Debug.Log( "Player hit an obstacle" );
-        Time.timeScale = 0f;
+        GameManager.S.GameOver();
     }
 }
