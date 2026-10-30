@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-// Runs the overall game: the start screen, scoring, game over, and restarting.
+// Runs the overall game: the start screen, scoring, difficulty, game over, and restarting.
 public class GameManager : MonoBehaviour {
     static public GameManager S;  // Lets other scripts reach the GameManager easily
 
@@ -13,13 +13,31 @@ public class GameManager : MonoBehaviour {
     public TextMeshProUGUI finalScoreText;
     public float pointsPerSecond = 10f;   // Score earned per second survived
 
+    [Header("Difficulty")]
+    public float startSpeed = 6f;               // Scroll speed at the start of a run
+    public float maxSpeed = 14f;                // Fastest the game can get
+    public float speedIncreasePerSecond = 0.1f; // How quickly the game speeds up
+
     [Header("Dynamic")]
     public float score = 0f;
     public bool isPlaying = false;
     public bool isGameOver = false;
+    public float currentSpeed;            // Base speed, rises over time
+    public float speedMultiplier = 1f;    // Temporary boosts (used by tiles later)
+
+    // The speed everything in the world actually scrolls at
+    public float ScrollSpeed {
+        get { return currentSpeed * speedMultiplier; }
+    }
+
+    // 0 at the start of a run, 1 once max speed is reached
+    public float DifficultyProgress {
+        get { return ( currentSpeed - startSpeed ) / ( maxSpeed - startSpeed ); }
+    }
 
     void Awake() {
         S = this;
+        currentSpeed = startSpeed;
     }
 
     void Start() {
@@ -39,10 +57,13 @@ public class GameManager : MonoBehaviour {
             }
         }
 
-        // Score goes up the longer the player survives
         if ( isPlaying ) {
+            // Score goes up the longer the player survives
             score += pointsPerSecond * Time.deltaTime;
             UpdateScoreDisplay();
+
+            // Gradually speed up, capped at maxSpeed
+            currentSpeed = Mathf.Min( currentSpeed + speedIncreasePerSecond * Time.deltaTime, maxSpeed );
         }
     }
 
