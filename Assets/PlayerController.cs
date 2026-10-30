@@ -1,13 +1,17 @@
 using UnityEngine;
 
 // Controls the player: jumping with space, crouching with the down arrow,
-// and fast falling when the down arrow is held in midair.
+// fast falling when the down arrow is held in midair, jump pad launches, and the shield.
 // The player stays in place horizontally; the world scrolls toward them.
 public class PlayerController : MonoBehaviour {
     [Header("Inscribed")]
     public float jumpForce = 12f;                 // Upward speed applied when jumping
     public float crouchScaleY = 0.5f;             // How much the player shrinks when crouching
     public float fastFallGravityMultiplier = 3f;  // How much stronger gravity is during a fast fall
+    public GameObject shieldVisual;               // Bubble shown while the shield is active
+
+    [Header("Dynamic")]
+    public bool hasShield = false;     // True while a shield will absorb the next hit
 
     private Rigidbody2D rb;
     private bool isGrounded = false;   // True while standing on the ground
@@ -18,6 +22,11 @@ public class PlayerController : MonoBehaviour {
         rb = GetComponent<Rigidbody2D>();
         normalScale = transform.localScale;
         normalGravity = rb.gravityScale;
+
+        // Start without a shield
+        if ( shieldVisual != null ) {
+            shieldVisual.SetActive( false );
+        }
     }
 
     void Update() {
@@ -49,13 +58,34 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    // Landing on the ground allows jumping again; touching an obstacle ends the run
+    // Landing on the ground allows jumping again; touching an obstacle uses the shield or ends the run
     void OnCollisionEnter2D( Collision2D coll ) {
         if ( coll.gameObject.CompareTag( "Ground" ) ) {
             isGrounded = true;
         } else if ( coll.gameObject.CompareTag( "Obstacle" ) ) {
-            Die();
+            if ( hasShield ) {
+                UseShield( coll.gameObject );
+            } else {
+                Die();
+            }
         }
+    }
+
+    // Called by shield tiles; only one shield can be held at a time
+    public void GiveShield() {
+        hasShield = true;
+        if ( shieldVisual != null ) {
+            shieldVisual.SetActive( true );
+        }
+    }
+
+    // The shield breaks and destroys the obstacle instead of the player dying
+    void UseShield( GameObject obstacle ) {
+        hasShield = false;
+        if ( shieldVisual != null ) {
+            shieldVisual.SetActive( false );
+        }
+        Destroy( obstacle );
     }
 
     // Called by jump pads: sends the player much higher than a normal jump

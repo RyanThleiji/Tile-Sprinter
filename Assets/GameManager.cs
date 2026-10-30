@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-// Runs the overall game: the start screen, scoring, difficulty, game over, and restarting.
+// Runs the overall game: the start screen, scoring, difficulty, speed boosts, game over, and restarting.
 public class GameManager : MonoBehaviour {
     static public GameManager S;  // Lets other scripts reach the GameManager easily
 
@@ -23,7 +23,8 @@ public class GameManager : MonoBehaviour {
     public bool isPlaying = false;
     public bool isGameOver = false;
     public float currentSpeed;            // Base speed, rises over time
-    public float speedMultiplier = 1f;    // Temporary boosts (used by tiles later)
+    public float speedMultiplier = 1f;    // Temporary boost from speed-up tiles
+    public float speedBoostTimer = 0f;    // Seconds left on the current boost
 
     // The speed everything in the world actually scrolls at
     public float ScrollSpeed {
@@ -64,6 +65,14 @@ public class GameManager : MonoBehaviour {
 
             // Gradually speed up, capped at maxSpeed
             currentSpeed = Mathf.Min( currentSpeed + speedIncreasePerSecond * Time.deltaTime, maxSpeed );
+
+            // Count down an active speed boost and end it when time runs out
+            if ( speedBoostTimer > 0f ) {
+                speedBoostTimer -= Time.deltaTime;
+                if ( speedBoostTimer <= 0f ) {
+                    speedMultiplier = 1f;
+                }
+            }
         }
     }
 
@@ -73,10 +82,16 @@ public class GameManager : MonoBehaviour {
         Time.timeScale = 1f;
     }
 
-    // Lets other scripts (like tiles later) give bonus points
+    // Lets other scripts (like bonus tiles) give extra points
     public void AddPoints( int points ) {
         score += points;
         UpdateScoreDisplay();
+    }
+
+    // Called by speed-up tiles; hitting another one restarts the timer
+    public void StartSpeedBoost( float multiplier, float duration ) {
+        speedMultiplier = multiplier;
+        speedBoostTimer = duration;
     }
 
     void UpdateScoreDisplay() {
