@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// Controls the player: jumping with space, crouching with the down arrow,
+// Controls the player: jumping with space, sliding with the down arrow,
 // fast falling when the down arrow is held in midair, jump pad launches, and the shield.
 // The player stays in place horizontally; the world scrolls toward them.
 public class PlayerController : MonoBehaviour {
@@ -8,7 +8,7 @@ public class PlayerController : MonoBehaviour {
     public float jumpForce = 12f;                 // Upward speed applied when jumping
     public float fastFallGravityMultiplier = 3f;  // How much stronger gravity is during a fast fall
     public Vector2 standingColliderSize = new Vector2( 0.8f, 1f );   // Hitbox while standing
-    public Vector2 crouchColliderSize = new Vector2( 0.8f, 0.5f );   // Smaller hitbox while ducking
+    public Vector2 crouchColliderSize = new Vector2( 0.8f, 0.5f );   // Smaller hitbox while sliding
     public GameObject shieldVisual;               // Bubble shown while the shield is active
 
     [Header("Dynamic")]
@@ -18,6 +18,7 @@ public class PlayerController : MonoBehaviour {
     private BoxCollider2D box;
     private bool isGrounded = false;   // True while standing on the ground
     private bool isDucking = false;    // True while the down arrow is held
+    private bool isLaunched = false;   // True from a jump pad launch until landing; disables fast fall
     private float normalGravity;       // Original gravity, restored after a fast fall
 
     // Read by PlayerAnimator to choose the right sprite
@@ -37,7 +38,8 @@ public class PlayerController : MonoBehaviour {
     }
 
     void Update() {
-        isDucking = Input.GetKey( KeyCode.DownArrow );
+        // Ignore the down arrow during a jump pad launch, so it can't be cancelled with a fast fall
+        isDucking = Input.GetKey( KeyCode.DownArrow ) && !isLaunched;
 
         // Jump only when on the ground, so the player can't jump in midair
         if ( Input.GetKeyDown( KeyCode.Space ) && isGrounded ) {
@@ -57,7 +59,7 @@ public class PlayerController : MonoBehaviour {
             rb.gravityScale = normalGravity;
         }
 
-        // Shrink the hitbox while ducking so the player fits under overhead obstacles
+        // Shrink the hitbox while sliding so the player fits under overhead obstacles
         SetColliderSize( isDucking ? crouchColliderSize : standingColliderSize );
     }
 
@@ -71,6 +73,7 @@ public class PlayerController : MonoBehaviour {
     void OnCollisionEnter2D( Collision2D coll ) {
         if ( coll.gameObject.CompareTag( "Ground" ) ) {
             isGrounded = true;
+            isLaunched = false;   // Landing ends the launch, so down works again
         } else if ( coll.gameObject.CompareTag( "Obstacle" ) ) {
             if ( hasShield ) {
                 UseShield( coll.gameObject );
@@ -97,10 +100,12 @@ public class PlayerController : MonoBehaviour {
         Destroy( obstacle );
     }
 
-    // Called by jump pads: sends the player much higher than a normal jump
+    // Called by jump pads: sends the player much higher than a normal jump,
+    // and locks out fast falling until they land
     public void Launch( float force ) {
         rb.linearVelocity = new Vector2( rb.linearVelocity.x, force );
         isGrounded = false;
+        isLaunched = true;
     }
 
     // Ends the run by telling the GameManager to show the Game Over screen
