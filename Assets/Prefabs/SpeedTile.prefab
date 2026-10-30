@@ -194,7 +194,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11c40937264954543b607fc88cb65b2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EffectTile
-  effect: 0
+  effect: 2
   bonusPoints: 50
   speedBoostMultiplier: 1.5
   speedBoostDuration: 4
+  fallingObstaclePrefab: {fileID: 0}
+  dropCount: 2
+  dropMinX: 1
+  dropMaxX: 7
+  dropHeight: 6

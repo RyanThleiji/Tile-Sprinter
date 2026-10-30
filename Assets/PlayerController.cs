@@ -6,22 +6,29 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
     [Header("Inscribed")]
     public float jumpForce = 12f;                 // Upward speed applied when jumping
-    public float crouchScaleY = 0.5f;             // How much the player shrinks when crouching
     public float fastFallGravityMultiplier = 3f;  // How much stronger gravity is during a fast fall
+    public Vector2 standingColliderSize = new Vector2( 0.8f, 1f );   // Hitbox while standing
+    public Vector2 crouchColliderSize = new Vector2( 0.8f, 0.5f );   // Smaller hitbox while ducking
     public GameObject shieldVisual;               // Bubble shown while the shield is active
 
     [Header("Dynamic")]
     public bool hasShield = false;     // True while a shield will absorb the next hit
 
     private Rigidbody2D rb;
+    private BoxCollider2D box;
     private bool isGrounded = false;   // True while standing on the ground
-    private Vector3 normalScale;       // Original size, restored after crouching
+    private bool isDucking = false;    // True while the down arrow is held
     private float normalGravity;       // Original gravity, restored after a fast fall
+
+    // Read by PlayerAnimator to choose the right sprite
+    public bool IsGrounded { get { return isGrounded; } }
+    public bool IsDucking { get { return isDucking; } }
 
     void Start() {
         rb = GetComponent<Rigidbody2D>();
-        normalScale = transform.localScale;
+        box = GetComponent<BoxCollider2D>();
         normalGravity = rb.gravityScale;
+        SetColliderSize( standingColliderSize );
 
         // Start without a shield
         if ( shieldVisual != null ) {
@@ -30,7 +37,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     void Update() {
-        bool holdingDown = Input.GetKey( KeyCode.DownArrow );
+        isDucking = Input.GetKey( KeyCode.DownArrow );
 
         // Jump only when on the ground, so the player can't jump in midair
         if ( Input.GetKeyDown( KeyCode.Space ) && isGrounded ) {
@@ -39,7 +46,7 @@ public class PlayerController : MonoBehaviour {
         }
 
         // Fast fall: holding down in the air pulls the player to the ground faster
-        if ( holdingDown && !isGrounded ) {
+        if ( isDucking && !isGrounded ) {
             rb.gravityScale = normalGravity * fastFallGravityMultiplier;
 
             // Cancel any upward motion so the drop starts immediately
@@ -50,12 +57,14 @@ public class PlayerController : MonoBehaviour {
             rb.gravityScale = normalGravity;
         }
 
-        // Shrink while the down arrow is held, then return to normal size
-        if ( holdingDown ) {
-            transform.localScale = new Vector3( normalScale.x, normalScale.y * crouchScaleY, normalScale.z );
-        } else {
-            transform.localScale = normalScale;
-        }
+        // Shrink the hitbox while ducking so the player fits under overhead obstacles
+        SetColliderSize( isDucking ? crouchColliderSize : standingColliderSize );
+    }
+
+    // Resizes the hitbox from the feet up, so it always stays on the ground
+    void SetColliderSize( Vector2 size ) {
+        box.size = size;
+        box.offset = new Vector2( 0f, size.y / 2f );
     }
 
     // Landing on the ground allows jumping again; touching an obstacle uses the shield or ends the run
