@@ -1,0 +1,65 @@
+ALIEN ESCAPE (originally "Tile Sprinter") - CHANGES FROM THE ONE-PAGER
+Ryan Thleiji
+
+THEME
+
+- The one-pager had no story. The game now has one: you play as an alien escaping
+  Area 51, running across the desert while dodging traps left behind to slow you
+  down. The title changed from "Tile Sprinter" to "Alien Escape" to match. The tiles
+  fit the theme as a mix of traps (speed-up, falling boxes) and things that help
+  you escape (gems, shields, jump pads).
+
+CUT OR CHANGED
+
+- Alternate movement modes (jetpack, etc.): Cut. The one-pager listed these as the
+  least planned part of the design, and building separate physics, art, and sound
+  for each mode didn't fit the time available. The jump pads (below) took over the
+  role of "different movement" by launching the player much higher than a normal jump.
+
+- Powerups: Merged into the tile system instead of being a separate pickup system.
+  The shield comes from a blue tile. The "extra life" idea was dropped because the
+  shield already covers it (it absorbs one hit).
+
+- Crouch became a slide. The character art only has a single duck pose, which looked
+  like sliding anyway, so it's presented as a slide with sand dust kicking up behind
+  the player. Sliding shrinks the hitbox so the player fits under overhead obstacles.
+
+TILES (as built)
+
+- Gem (good): +50 points. Floats at body height, so running into it collects it and
+  jumping skips it. Has a sparkle effect.
+- Blue button - Shield (good): blocks the next obstacle you hit, shown as a bubble.
+- Green button - Speed Up (bad): the game runs 1.5x faster for 4 seconds.
+- Red button - Drop (bad): two boxes fall from the sky ahead of the player.
+
+ADDED
+
+- Jump pads and bait pads: This is how the one-pager's "tiles you are sometimes
+  required to hit" works. A real jump pad is followed by a wall too tall to clear
+  with a normal jump, so you must hit the pad. A bait pad sits under a hanging
+  obstacle, so hitting it launches you into the obstacle. Real and bait pads look
+  identical on purpose: the player decides whether to hit the pad by reading the
+  obstacle that follows, not the pad's color.
+
+- Fast fall: holding down in midair makes the player drop quickly. It's disabled
+  during a jump pad launch so a bait pad can't be cancelled.
+
+- How to Play page: press H on the start screen to see the controls and what each
+  tile does, with the actual tile art next to each description.
+
+- Speed lock: while a jump pad pattern is on screen, the game speed is held steady
+  (a speed boost waits or keeps going until the pattern passes). Without this, a
+  boost starting or ending mid-pattern threw off the launch timing.
+
+- Difficulty ramp: the scroll speed increases over time up to a maximum, and
+  obstacles come slightly closer together, but never closer than a safe minimum gap.
+
+ART AND SOUND
+
+- Art: Kenney "Platformer Pack Remastered" (green alien player with run, jump, and
+  duck sprites; crates; sand ground; desert background; switches and gem for tiles).
+  The ground and background scroll, with the background moving slower for depth.
+- Sound: Kenney "Digital Audio" and "Impact Sounds" packs. Every action has its own
+  sound (jump, land, slide, launch, each tile, shield pickup and break, death, game
+  start). No background music, per the assignment guidelines.
+- All Kenney assets are public domain (CC0).
