@@ -26,7 +26,7 @@ See [DesignChanges.txt](DesignChanges.txt) for how the game changed from the ori
 
 ## How to run
 
-Open the project in Unity 6 (6000.6), open `Assets/Scenes/_Scene_0`, and press Play.
+Open the project in Unity 6 (6000.6), open Assets/_Scene_0, and press Play.
 
 ## Credits
 
