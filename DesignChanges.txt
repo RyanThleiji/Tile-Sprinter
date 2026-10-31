@@ -3,7 +3,7 @@ Ryan Thleiji
 
 THEME
 
-- The one-pager had no story. The game now has one: you play as an alien escaping
+- The one-pager had no story. Now, you play as an alien escaping
   Area 51, running across the desert while dodging traps left behind to slow you
   down. The title changed from "Tile Sprinter" to "Alien Escape" to match. The tiles
   fit the theme as a mix of traps (speed-up, falling boxes) and things that help
@@ -13,7 +13,7 @@ CUT OR CHANGED
 
 - Alternate movement modes (jetpack, etc.): Cut. The one-pager listed these as the
   least planned part of the design, and building separate physics, art, and sound
-  for each mode didn't fit the time available. The jump pads (below) took over the
+  for each mode was going to be a challenge. The jump pads (below) took over the
   role of "different movement" by launching the player much higher than a normal jump.
 
 - Powerups: Merged into the tile system instead of being a separate pickup system.
