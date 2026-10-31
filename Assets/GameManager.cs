@@ -2,12 +2,14 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-// Runs the overall game: the start screen, scoring, difficulty, speed boosts, game over, and restarting.
+// Runs the overall game: the start screen, how-to-play page, scoring, difficulty,
+// speed boosts, game over, and restarting.
 public class GameManager : MonoBehaviour {
     static public GameManager S;  // Lets other scripts reach the GameManager easily
 
     [Header("Inscribed")]
     public GameObject startPanel;
+    public GameObject tutorialPanel;      // How to Play page, opened with H from the start screen
     public GameObject gameOverPanel;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI finalScoreText;
@@ -25,6 +27,11 @@ public class GameManager : MonoBehaviour {
     public float currentSpeed;            // Base speed, rises over time
     public float speedMultiplier = 1f;    // Temporary boost from speed-up tiles
     public float speedBoostTimer = 0f;    // Seconds left on the current boost
+    public float speedLockTimer = 0f;     // While above 0, the speed can't change (protects jump pad timing)
+
+    private bool hasPendingBoost = false;  // A boost picked up during a speed lock, waiting to start
+    private float pendingMultiplier;
+    private float pendingDuration;
 
     // The speed everything in the world actually scrolls at
     public float ScrollSpeed {
@@ -44,13 +51,18 @@ public class GameManager : MonoBehaviour {
     void Start() {
         // Begin frozen on the start screen
         startPanel.SetActive( true );
+        tutorialPanel.SetActive( false );
         gameOverPanel.SetActive( false );
         Time.timeScale = 0f;
-        SoundManager.Play( SoundManager.S.gameStart );
     }
 
     void Update() {
-        // Space starts the game from the menu, or restarts after game over
+        // Before the run starts, H opens and closes the How to Play page
+        if ( !isPlaying && !isGameOver && Input.GetKeyDown( KeyCode.H ) ) {
+            tutorialPanel.SetActive( !tutorialPanel.activeSelf );
+        }
+
+        // Space starts the game from the menu or tutorial, or restarts after game over
         if ( Input.GetKeyDown( KeyCode.Space ) ) {
             if ( isGameOver ) {
                 Restart();
@@ -64,14 +76,26 @@ public class GameManager : MonoBehaviour {
             score += pointsPerSecond * Time.deltaTime;
             UpdateScoreDisplay();
 
-            // Gradually speed up, capped at maxSpeed
-            currentSpeed = Mathf.Min( currentSpeed + speedIncreasePerSecond * Time.deltaTime, maxSpeed );
+            if ( speedLockTimer > 0f ) {
+                // A jump pad pattern is on screen, so hold the speed steady until it passes
+                speedLockTimer -= Time.deltaTime;
+            } else {
+                // Gradually speed up, capped at maxSpeed
+                currentSpeed = Mathf.Min( currentSpeed + speedIncreasePerSecond * Time.deltaTime, maxSpeed );
 
-            // Count down an active speed boost and end it when time runs out
-            if ( speedBoostTimer > 0f ) {
-                speedBoostTimer -= Time.deltaTime;
-                if ( speedBoostTimer <= 0f ) {
-                    speedMultiplier = 1f;
+                // Start a boost that was picked up during a speed lock
+                if ( hasPendingBoost ) {
+                    hasPendingBoost = false;
+                    speedMultiplier = pendingMultiplier;
+                    speedBoostTimer = pendingDuration;
+                }
+
+                // Count down an active speed boost and end it when time runs out
+                if ( speedBoostTimer > 0f ) {
+                    speedBoostTimer -= Time.deltaTime;
+                    if ( speedBoostTimer <= 0f ) {
+                        speedMultiplier = 1f;
+                    }
                 }
             }
         }
@@ -80,7 +104,9 @@ public class GameManager : MonoBehaviour {
     void StartGame() {
         isPlaying = true;
         startPanel.SetActive( false );
+        tutorialPanel.SetActive( false );
         Time.timeScale = 1f;
+        SoundManager.Play( SoundManager.S.gameStart );
     }
 
     // Lets other scripts (like bonus tiles) give extra points
@@ -89,10 +115,23 @@ public class GameManager : MonoBehaviour {
         UpdateScoreDisplay();
     }
 
-    // Called by speed-up tiles; hitting another one restarts the timer
+    // Called by speed-up tiles; hitting another one restarts the timer.
+    // During a speed lock, the boost waits until the lock ends.
     public void StartSpeedBoost( float multiplier, float duration ) {
+        if ( speedLockTimer > 0f ) {
+            hasPendingBoost = true;
+            pendingMultiplier = multiplier;
+            pendingDuration = duration;
+            return;
+        }
         speedMultiplier = multiplier;
         speedBoostTimer = duration;
+    }
+
+    // Called by the spawner when a jump pad pattern appears, so the speed
+    // can't change until the player has passed it
+    public void LockSpeed( float seconds ) {
+        speedLockTimer = Mathf.Max( speedLockTimer, seconds );
     }
 
     void UpdateScoreDisplay() {
