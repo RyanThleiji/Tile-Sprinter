@@ -25,7 +25,6 @@ public class ObstacleSpawner : MonoBehaviour {
     public float padToWallTime = 0.65f;    // Seconds from hitting a real pad to reaching the wall
     public float padToSkyTime = 0.45f;     // Seconds from hitting a bait pad to reaching the sky obstacle
     public float patternExtraDelay = 1.2f; // Extra breathing room after a pattern
-    public float playerX = -5f;            // Where the player stands, used to time the speed lock
     public float lockBuffer = 0.5f;        // Extra seconds of steady speed after the obstacle passes
 
     [Header("Effect Tiles")]
@@ -59,31 +58,32 @@ public class ObstacleSpawner : MonoBehaviour {
         Invoke( nameof( SpawnNext ), delay );
     }
 
-    // Places a pad and its matching obstacle. The obstacle's distance is based on the
-    // current speed, and the speed is locked until the pattern passes the player,
-    // so a speed boost can't throw off the launch timing.
+    // Places a pad and its matching obstacle. The obstacle follows the pad at the right
+    // distance for the current speed until the pad is hit, then the pad locks the speed
+    // until the obstacle has passed, so the launch always lines up.
     void SpawnPadPattern() {
         float padX = transform.position.x;
         float speed = GameManager.S.ScrollSpeed;
         bool isBait = Random.value < baitChance;
         float padToObstacleTime = isBait ? padToSkyTime : padToWallTime;
 
-        if ( isBait ) {
-            SpawnAt( baitPadPrefab, padX );
-            SpawnAt( skyObstaclePrefab, padX + speed * padToObstacleTime );
-        } else {
-            SpawnAt( jumpPadPrefab, padX );
-            SpawnAt( tallWallPrefab, padX + speed * padToObstacleTime );
-        }
+        GameObject padGO = SpawnAt( isBait ? baitPadPrefab : jumpPadPrefab, padX );
+        GameObject obstacleGO = SpawnAt( isBait ? skyObstaclePrefab : tallWallPrefab,
+                                         padX + speed * padToObstacleTime );
 
-        // Time for the pad to reach the player, plus the pad-to-obstacle time, plus a buffer
-        float timeToPlayer = ( padX - playerX ) / speed;
-        GameManager.S.LockSpeed( timeToPlayer + padToObstacleTime + lockBuffer );
+        // The pad locks the speed for this long once the player hits it
+        JumpPad pad = padGO.GetComponent<JumpPad>();
+        pad.speedLockTime = padToObstacleTime + lockBuffer;
+
+        // The obstacle keeps its distance from the pad matched to the current speed
+        PadFollower follower = obstacleGO.AddComponent<PadFollower>();
+        follower.pad = pad;
+        follower.padToObstacleTime = padToObstacleTime;
     }
 
     // Spawns a prefab at the given X, keeping the prefab's own height
-    void SpawnAt( GameObject prefab, float x ) {
+    GameObject SpawnAt( GameObject prefab, float x ) {
         Vector3 pos = new Vector3( x, prefab.transform.position.y, 0f );
-        Instantiate( prefab, pos, Quaternion.identity );
+        return Instantiate( prefab, pos, Quaternion.identity );
     }
 }

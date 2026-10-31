@@ -77,7 +77,7 @@ public class GameManager : MonoBehaviour {
             UpdateScoreDisplay();
 
             if ( speedLockTimer > 0f ) {
-                // A jump pad pattern is on screen, so hold the speed steady until it passes
+                // The player just hit a jump pad, so hold the speed steady until the obstacle passes
                 speedLockTimer -= Time.deltaTime;
             } else {
                 // Gradually speed up, capped at maxSpeed
@@ -128,8 +128,8 @@ public class GameManager : MonoBehaviour {
         speedBoostTimer = duration;
     }
 
-    // Called by the spawner when a jump pad pattern appears, so the speed
-    // can't change until the player has passed it
+    // Called by a jump pad when the player hits it, so the speed can't change
+    // until the wall or sky obstacle has passed
     public void LockSpeed( float seconds ) {
         speedLockTimer = Mathf.Max( speedLockTimer, seconds );
     }
