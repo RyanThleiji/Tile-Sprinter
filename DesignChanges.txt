@@ -39,7 +39,7 @@ ADDED
   with a normal jump, so you must hit the pad. A bait pad sits under a hanging
   obstacle, so hitting it launches you into the obstacle. Real and bait pads look
   identical on purpose: the player decides whether to hit the pad by reading the
-  obstacle that follows, not the pad's color.
+  obstacle that follows, not the pad's color. This was inspired by Geometry Dash.
 
 - Fast fall: holding down in midair makes the player drop quickly. It's disabled
   during a jump pad launch so a bait pad can't be cancelled.
