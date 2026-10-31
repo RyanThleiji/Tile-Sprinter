@@ -46,6 +46,7 @@ public class GameManager : MonoBehaviour {
         startPanel.SetActive( true );
         gameOverPanel.SetActive( false );
         Time.timeScale = 0f;
+        SoundManager.Play( SoundManager.S.gameStart );
     }
 
     void Update() {

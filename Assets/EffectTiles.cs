@@ -26,15 +26,18 @@ public class EffectTile : MonoBehaviour {
         switch ( effect ) {
             case TileEffect.BonusPoints:
                 GameManager.S.AddPoints( bonusPoints );
+                SoundManager.Play( SoundManager.S.gem );
                 break;
             case TileEffect.Shield:
-                player.GiveShield();
+                player.GiveShield();   // Plays its own sound
                 break;
             case TileEffect.SpeedUp:
                 GameManager.S.StartSpeedBoost( speedBoostMultiplier, speedBoostDuration );
+                SoundManager.Play( SoundManager.S.speedUp );
                 break;
             case TileEffect.DropObstacles:
                 DropObstacles();
+                SoundManager.Play( SoundManager.S.dropWarning );
                 break;
         }
 

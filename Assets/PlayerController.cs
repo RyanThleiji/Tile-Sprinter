@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour {
     public float fastFallGravityMultiplier = 3f;  // How much stronger gravity is during a fast fall
     public Vector2 standingColliderSize = new Vector2( 0.8f, 1f );   // Hitbox while standing
     public Vector2 crouchColliderSize = new Vector2( 0.8f, 0.5f );   // Smaller hitbox while sliding
+    public float landSoundMinSpeed = 2f;          // Only play the land sound for real landings
     public GameObject shieldVisual;               // Bubble shown while the shield is active
 
     [Header("Dynamic")]
@@ -18,6 +19,7 @@ public class PlayerController : MonoBehaviour {
     private BoxCollider2D box;
     private bool isGrounded = false;   // True while standing on the ground
     private bool isDucking = false;    // True while the down arrow is held
+    private bool wasDucking = false;   // Last frame's ducking, to detect when a slide or fast fall starts
     private bool isLaunched = false;   // True from a jump pad launch until landing; disables fast fall
     private float normalGravity;       // Original gravity, restored after a fast fall
 
@@ -41,10 +43,17 @@ public class PlayerController : MonoBehaviour {
         // Ignore the down arrow during a jump pad launch, so it can't be cancelled with a fast fall
         isDucking = Input.GetKey( KeyCode.DownArrow ) && !isLaunched;
 
+        // Play a sound the moment a slide or fast fall begins
+        if ( isDucking && !wasDucking ) {
+            SoundManager.Play( isGrounded ? SoundManager.S.slide : SoundManager.S.fastFall );
+        }
+        wasDucking = isDucking;
+
         // Jump only when on the ground, so the player can't jump in midair
         if ( Input.GetKeyDown( KeyCode.Space ) && isGrounded ) {
             rb.linearVelocity = new Vector2( rb.linearVelocity.x, jumpForce );
             isGrounded = false;
+            SoundManager.Play( SoundManager.S.jump );
         }
 
         // Fast fall: holding down in the air pulls the player to the ground faster
@@ -72,6 +81,10 @@ public class PlayerController : MonoBehaviour {
     // Landing on the ground allows jumping again; touching an obstacle uses the shield or ends the run
     void OnCollisionEnter2D( Collision2D coll ) {
         if ( coll.gameObject.CompareTag( "Ground" ) ) {
+            // Skip the sound when just settling onto the ground at the start
+            if ( coll.relativeVelocity.magnitude > landSoundMinSpeed ) {
+                SoundManager.Play( SoundManager.S.land );
+            }
             isGrounded = true;
             isLaunched = false;   // Landing ends the launch, so down works again
         } else if ( coll.gameObject.CompareTag( "Obstacle" ) ) {
@@ -89,6 +102,7 @@ public class PlayerController : MonoBehaviour {
         if ( shieldVisual != null ) {
             shieldVisual.SetActive( true );
         }
+        SoundManager.Play( SoundManager.S.shieldGet );
     }
 
     // The shield breaks and destroys the obstacle instead of the player dying
@@ -97,6 +111,7 @@ public class PlayerController : MonoBehaviour {
         if ( shieldVisual != null ) {
             shieldVisual.SetActive( false );
         }
+        SoundManager.Play( SoundManager.S.shieldBreak );
         Destroy( obstacle );
     }
 
@@ -106,10 +121,12 @@ public class PlayerController : MonoBehaviour {
         rb.linearVelocity = new Vector2( rb.linearVelocity.x, force );
         isGrounded = false;
         isLaunched = true;
+        SoundManager.Play( SoundManager.S.launch );
     }
 
     // Ends the run by telling the GameManager to show the Game Over screen
     void Die() {
+        SoundManager.Play( SoundManager.S.death );
         GameManager.S.GameOver();
     }
 }
